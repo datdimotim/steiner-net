@@ -1,26 +1,63 @@
 <html>
 <style>
+
 body { 
   font: 14px helvetica neue, helvetica, arial, sans-serif;
 }
 
-#cy {
+.absolute-full {
   height: 100%;
   width: 100%;
   position: absolute;
-  left: 0;
-  top: 0;
 }
+
+.control-button {
+  margin: 10px;
+  width: 50px;
+  height: 30px;
+  font-size: 20px;
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.js"></script>
-<div id="cy"></div>
+
+<div class="absolute-full">
+  <div>
+    <input type="button" value="+" class="control-button" onclick="addVertex()">
+
+    <input type="button" value="-" class="control-button" onclick="removeVertex()">
+  </div>
+
+
+  <div id="cy" class="absolute-full">
+
+  </div>
+
+</div>
 
 <script>
+var vertexCount = 4;
+
+function addVertex(){
+  clearAll();
+  vertexCount++;
+  main(vertexCount)
+}
+
+function removeVertex(){
+  clearAll();
+  vertexCount--;
+  if (vertexCount < 1) {
+    vertexCount = 1
+  }
+  main(vertexCount)
+}
+
 const cy = cytoscape({
   container: document.getElementById('cy'),
 
   layout: {
-    name: 'cose',
+    name: 'random',
     padding: 10
   },
 
@@ -117,7 +154,7 @@ const drawGraph = (vs, es) => {
   })
 
   const layout = cy.layout({
-    name: 'cose'
+    name: 'random'
   });
 
   layout.run();
@@ -138,12 +175,13 @@ const clearComputedElements = () => {
   cy.remove(cy.elements('edge'));
 }
 
+function clearAll(){
+  cy.remove(cy.elements('node'));
+  cy.remove(cy.elements('edge'));
+}
 
-(function main() {
 
-  drawGraph(['A', 'B', 'C', 'D', 'E'], [])
-
-  cy.nodes().on('drag', function(e) {
+function drawSteinerNet() {
     clearComputedElements();
     const positions = cy.elements('node[isMain]').map(v => ({
       id: v.id(),
@@ -164,9 +202,19 @@ const clearComputedElements = () => {
     }, null).s;
 
     drawExt(sln.vs, sln.es);
-  });
+  }
 
-})()
+function main(count) {
+  const initVertexes = []
+  for (let i=0; i<count; i++){
+     initVertexes.push(String.fromCharCode(65 + i))
+  }
+
+  drawGraph(initVertexes, [])
+
+  cy.nodes().on('drag', () => drawSteinerNet());
+  drawSteinerNet();
+}
 
 const select1 = ls => {
   const res = []
@@ -363,6 +411,9 @@ function steiner(positions) {
 
   return [...fstVars, ...sndVars];
 }
+
+main(vertexCount)
+
 
 </script>
 
