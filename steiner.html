@@ -204,7 +204,7 @@
     const net = findOptimalSteinerNet(testData);
     const fn = new Date();
     const time = fn - st;
-    alert(`time: ${time}\nweight: ${Math.floor(net.w)}`)
+    alert(`time: ${time}\ncount: ${net.c}\nweight: ${Math.floor(net.w)}`)
   }
 
   function findOptimalSteinerNet(positions) {
@@ -215,7 +215,8 @@
       if (!acc || acc.w > w) {
         return {
           s: s,
-          w: w
+          w: w,
+          c: slns.length
         }
       } else {
         return acc
@@ -281,11 +282,38 @@
     return net.es.filter(e => e.from.id === v.id || e.to.id === v.id)
   }
 
-  const isAddable = (cur, v, net) => {
+  function cosEdgesAngle(a, b) {
+    const ax = a.to.pos.x-a.from.pos.x;
+    const ay = a.to.pos.y-a.from.pos.y;
+
+    const bx = b.to.pos.x-b.from.pos.x;
+    const by = b.to.pos.y-b.from.pos.y;
+
+    const v = (ax*bx + ay*by)/Math.sqrt((ax*ax + ay*ay)*(bx*bx + by*by))
+    return v
+  }
+
+  function normEdgeDir(e, vFrom){
+    if(e.from.id === vFrom.id) {
+      return e;
+    } else {
+      return {
+        from: e.to,
+        to: e.from
+      }
+    }
+  }
+
+  function isAddable(cur, v, net) {
     const es = getVertEdges(v, net)
     if (es.length > 2) return false;
 
-    return true;
+    const curEdge = {
+      from: v,
+      to: cur
+    }
+
+    return !es.some(e => cosEdgesAngle(curEdge, normEdgeDir(e, v)) > -1/2)
   }
 
   function evalWeigth(net) {
