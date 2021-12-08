@@ -18,6 +18,12 @@
     font-size: 20px;
   }
 
+  .benchmark-button {
+    margin: 10px;
+    height: 30px;
+    font-size: 20px;
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.js"></script>
 
@@ -26,6 +32,8 @@
     <input type="button" value="+" class="control-button" onclick="addVertex()">
 
     <input type="button" value="-" class="control-button" onclick="removeVertex()">
+
+    <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
   </div>
 
 
@@ -180,15 +188,28 @@
     cy.remove(cy.elements('edge'));
   }
 
+  function benchmark() {
+    const testData = [{"id": "A", "pos": {"x": 69.2520325203252, "y": 236.64634146341456}}, {
+      "id": "B",
+      "pos": {"x": 48.47154471544715, "y": 651.1016260162601}
+    }, {"id": "C", "pos": {"x": 501.0243902439024, "y": 501.020325203252}}, {
+      "id": "D",
+      "pos": {"x": 756.1626016260163, "y": 363.6382113821138}
+    }, {"id": "E", "pos": {"x": 863.5284552845529, "y": 793.1016260162602}}, {
+      "id": "F",
+      "pos": {"x": 243.5772357723577, "y": 133.89837398373976}
+    }];
 
-  function drawSteinerNet() {
-    clearComputedElements();
-    const positions = cy.elements('node[isMain]').map(v => ({
-      id: v.id(),
-      pos: v.renderedPosition()
-    }))
+    const st = new Date();
+    const net = findOptimalSteinerNet(testData);
+    const fn = new Date();
+    const time = fn - st;
+    alert(`time: ${time}\nweight: ${Math.floor(net.w)}`)
+  }
+
+  function findOptimalSteinerNet(positions) {
     const slns = steiner(positions);
-    const sln = slns.reduce((acc, s) => {
+    return slns.reduce((acc, s) => {
       const w = evalWeigth(s);
 
       if (!acc || acc.w > w) {
@@ -199,9 +220,19 @@
       } else {
         return acc
       }
-    }, null).s;
+    }, null)
+  }
 
-    drawExt(sln.vs, sln.es);
+  function drawSteinerNet() {
+    clearComputedElements();
+    const positions = cy.elements('node[isMain]').map(v => ({
+      id: v.id(),
+      pos: v.renderedPosition()
+    }))
+
+    const opt = findOptimalSteinerNet(positions);
+
+    drawExt(opt.s.vs, opt.s.es);
   }
 
   function main(count) {
