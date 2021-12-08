@@ -283,18 +283,17 @@
   }
 
   function cosEdgesAngle(a, b) {
-    const ax = a.to.pos.x-a.from.pos.x;
-    const ay = a.to.pos.y-a.from.pos.y;
+    const ax = a.to.pos.x - a.from.pos.x;
+    const ay = a.to.pos.y - a.from.pos.y;
 
-    const bx = b.to.pos.x-b.from.pos.x;
-    const by = b.to.pos.y-b.from.pos.y;
+    const bx = b.to.pos.x - b.from.pos.x;
+    const by = b.to.pos.y - b.from.pos.y;
 
-    const v = (ax*bx + ay*by)/Math.sqrt((ax*ax + ay*ay)*(bx*bx + by*by))
-    return v
+    return (ax * bx + ay * by) / Math.sqrt((ax * ax + ay * ay) * (bx * bx + by * by))
   }
 
-  function normEdgeDir(e, vFrom){
-    if(e.from.id === vFrom.id) {
+  function normEdgeDir(e, vFrom) {
+    if (e.from.id === vFrom.id) {
       return e;
     } else {
       return {
@@ -313,7 +312,7 @@
       to: cur
     }
 
-    return !es.some(e => cosEdgesAngle(curEdge, normEdgeDir(e, v)) > -1/2)
+    return !es.some(e => cosEdgesAngle(curEdge, normEdgeDir(e, v)) > -1 / 2 + 0.001)
   }
 
   function evalWeigth(net) {
@@ -427,40 +426,46 @@
 
         return genTriangles(s1, s2).flatMap(m => {
           return steiner([...vs, m]).flatMap(solution => {
-            return [...vs, ...solution.vs].flatMap(k => {
-              return genExtVertex(s1, s2, m, k).map(ext => {
+            const es = getVertEdges(m, solution)
 
-                return {
-                  vs: [
-                    ext,
-                    ...solution.vs
-                  ],
-                  es: [{
-                    from: s1,
+            if (es.length !== 1) {
+              return []
+            }
+
+            const k = es[0].from.id !== m.id ? es[0].from : es[0].to
+
+            return genExtVertex(s1, s2, m, k).map(ext => {
+
+              return {
+                vs: [
+                  ext,
+                  ...solution.vs
+                ],
+                es: [{
+                  from: s1,
+                  to: ext
+                },
+                  {
+                    from: s2,
                     to: ext
                   },
-                    {
-                      from: s2,
-                      to: ext
-                    },
-                    ...solution.es.map(e => {
-                      if (e.from.id === m.id) {
-                        return {
-                          from: ext,
-                          to: e.to
-                        }
+                  ...solution.es.map(e => {
+                    if (e.from.id === m.id) {
+                      return {
+                        from: ext,
+                        to: e.to
                       }
-                      if (e.to.id === m.id) {
-                        return {
-                          from: e.from,
-                          to: ext
-                        }
+                    }
+                    if (e.to.id === m.id) {
+                      return {
+                        from: e.from,
+                        to: ext
                       }
-                      return e
-                    })
-                  ]
-                }
-              })
+                    }
+                    return e
+                  })
+                ]
+              }
             })
           })
         })
