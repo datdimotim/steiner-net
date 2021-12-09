@@ -407,15 +407,16 @@
         const cur = s.selected;
         const vs = s.other;
 
+        const closest = vs.reduce((acc, i) => {
+          if (!acc) {
+            return i;
+          }
+          const distOld = distSquare(acc, cur);
+          const distCur = distSquare(i, cur)
+          return distCur < distOld ? i : acc
+        }, null)
+
         return steiner(vs).flatMap(solution => {
-          const closest = vs.reduce((acc, i) => {
-            if (!acc) {
-              return i;
-            }
-            const distOld = distSquare(acc, cur);
-            const distCur = distSquare(i, cur)
-            return distCur < distOld ? i : acc
-          }, null)
           return [closest].filter(v => isAddable(cur, v, solution))
             .map(v => ({
               vs: solution.vs,
