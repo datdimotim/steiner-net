@@ -204,24 +204,27 @@
     const net = findOptimalSteinerNet(testData);
     const fn = new Date();
     const time = fn - st;
-    alert(`time: ${time}\ncount: ${net.c}\nweight: ${Math.floor(net.w)}`)
+    alert(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}\ndoubles: ${net.doubles}`)
   }
 
   function findOptimalSteinerNet(positions) {
     const slns = steiner(positions);
-    return slns.reduce((acc, s) => {
+    const res = slns.reduce((acc, s) => {
       const w = evalWeigth(s);
 
-      if (!acc || acc.w > w) {
+      if (!acc || acc.weight > w) {
         return {
-          s: s,
-          w: w,
-          c: slns.length
+          optimalNet: s,
+          weight: w,
         }
       } else {
         return acc
       }
     }, null)
+
+    res.count = slns.length;
+    res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
+    return res;
   }
 
   function drawSteinerNet() {
@@ -233,7 +236,7 @@
 
     const opt = findOptimalSteinerNet(positions);
 
-    drawExt(opt.s.vs, opt.s.es);
+    drawExt(opt.optimalNet.vs, opt.optimalNet.es);
   }
 
   function main(count) {
