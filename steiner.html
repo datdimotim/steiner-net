@@ -353,9 +353,6 @@
     const mcx = m.pos.x - sx
     const mcy = m.pos.y - sy
 
-    const rsq = mcx * mcx + mcy * mcy
-
-
     const kcx = k.pos.x - sx
     const kcy = k.pos.y - sy
 
@@ -382,6 +379,12 @@
 
   }
 
+  function distSquare(a, b) {
+    const dx = b.pos.x - a.pos.x;
+    const dy = b.pos.y - a.pos.y;
+    return dx * dx + dy * dy;
+  }
+
   function steiner(positions) {
     if (positions.length <= 1) {
       return [{
@@ -405,7 +408,15 @@
         const vs = s.other;
 
         return steiner(vs).flatMap(solution => {
-          return vs.filter(v => isAddable(cur, v, solution))
+          const closest = vs.reduce((acc, i) => {
+            if (!acc) {
+              return i;
+            }
+            const distOld = distSquare(acc, cur);
+            const distCur = distSquare(i, cur)
+            return distCur < distOld ? i : acc
+          }, null)
+          return [closest].filter(v => isAddable(cur, v, solution))
             .map(v => ({
               vs: solution.vs,
               es: [...solution.es, {
