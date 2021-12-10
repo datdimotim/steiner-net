@@ -223,7 +223,7 @@
     }, null)
 
     res.count = slns.length;
-    res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
+    //res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
     return res;
   }
 
@@ -410,13 +410,14 @@
           return distCur < distOld ? i : acc
         }, null)
 
-        return steiner(vs).flatMap(solution => {
-          return [closest].filter(v => isAddable(cur, v, solution))
-            .map(v => ({
-              vs: solution.vs,
-              es: [...solution.es, {from: cur, to: v}]
-            }));
-        })
+        const optNet = findOptimalSteinerNet(vs).optimalNet;
+
+        if (!isAddable(cur, closest, optNet)) return []
+
+        return [{
+          vs: optNet.vs,
+          es: [...optNet.es, {from: cur, to: closest}]
+        }]
       });
 
 
