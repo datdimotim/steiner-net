@@ -24,6 +24,12 @@
     font-size: 20px;
   }
 
+  .weight-label {
+    margin: 10px;
+    height: 30px;
+    font-size: 20px;
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.js"></script>
 
@@ -34,6 +40,8 @@
     <input type="button" value="-" class="control-button" onclick="removeVertex()">
 
     <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
+
+    <span id="weight_label" class="weight-label"></span>
   </div>
 
 
@@ -240,6 +248,8 @@
     const opt = findOptimalSteinerNet(positions);
 
     drawExt(opt.optimalNet.vs, opt.optimalNet.es);
+
+    document.getElementById("weight_label").innerText = `Weight: ${Math.floor(opt.weight)}`
   }
 
   function main(count) {
