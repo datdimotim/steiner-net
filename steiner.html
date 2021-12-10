@@ -207,9 +207,8 @@
     alert(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}\ndoubles: ${net.doubles}`)
   }
 
-  function findOptimalSteinerNet(positions) {
-    const slns = steiner(positions);
-    const res = slns.reduce((acc, s) => {
+  function reduceOptNet(nets) {
+    return nets.reduce((acc, s) => {
       const w = evalWeigth(s);
 
       if (!acc || acc.weight > w) {
@@ -221,7 +220,11 @@
         return acc
       }
     }, null)
+  }
 
+  function findOptimalSteinerNet(positions) {
+    const slns = steiner(positions);
+    const res = reduceOptNet(slns)
     res.count = slns.length;
     //res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
     return res;
@@ -427,8 +430,7 @@
         const s2 = s.s2;
         const vs = s.other
 
-
-        return genTriangles(s1, s2).flatMap(m => {
+        const nets = genTriangles(s1, s2).flatMap(m => {
           return steiner([...vs, m]).flatMap(solution => {
             const es = getVertEdges(m, solution)
 
@@ -466,6 +468,11 @@
           })
         })
 
+        if (nets.length === 0) {
+          return []
+        } else {
+          return [reduceOptNet(nets).optimalNet];
+        }
       })
 
     return [...fstVars, ...sndVars];
