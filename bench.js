@@ -1,5 +1,6 @@
 const alg0 = require('./alg0')
 const alg = require('./alg')
+const tests = require('./testData.json')
 
 const testData = [
     {"id": "A", "pos": {"x": 69.2520325203252, "y": 236.64634146341456}},
@@ -10,7 +11,14 @@ const testData = [
     {"id": "F", "pos": {"x": 243.5772357723577, "y": 133.89837398373976}},
 ];
 
-console.log(compare(testData))
+for (let i = 0; i < tests.length; i++) {
+    if (!compare(tests[i])) {
+        console.log(`fail: ${i}`)
+        break;
+    } else {
+        console.log(`success: ${i}`)
+    }
+}
 
 function compare(testData) {
     const w0 = alg0.findOptimalSteinerNet(testData).w;
