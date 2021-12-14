@@ -51,7 +51,8 @@ const cy = cytoscape({
             'source-arrow-shape': 'circle',
             'line-color': 'data(faveColor)',
             'source-arrow-color': 'data(faveColor)',
-            'target-arrow-color': 'data(faveColor)'
+            'target-arrow-color': 'data(faveColor)',
+            'content': 'data(label)'
         })
         .selector('edge.questionable')
         .css({
@@ -97,22 +98,20 @@ const mkVertExt = i => ({
     }
 })
 
-const mkEdge = (a, b) => ({
+const mkEdge = (a, b, label) => ({
     data: {
         source: a,
         target: b,
         faveColor: '#6FB1FC',
-        strength: 90
+        strength: 90,
+        label: label
     }
 })
 
 
-const drawGraph = (vs, es) => {
+const drawGraph = (vs) => {
     vs.forEach(v => {
         cy.add(mkVert(v))
-    })
-    es.forEach(e => {
-        cy.add(mkEdge(e[0], e[1]))
     })
 
     const layout = cy.layout({
@@ -127,8 +126,12 @@ const drawExt = (vs, es) => {
         cy.add(mkVertExt(v))
     })
     es.forEach(e => {
-        cy.add(mkEdge(e.from.id, e.to.id))
+        const dx = e.from.pos.x - e.to.pos.x;
+        const dy = e.from.pos.y - e.to.pos.y;
+        const w = Math.sqrt(dx*dx+dy*dy)
+        cy.add(mkEdge(e.from.id, e.to.id, Math.floor(w)))
     })
+    cy.elements('node[!isMain]').lock()
 }
 
 
@@ -159,7 +162,7 @@ function benchmark() {
     const net = findOptimalSteinerNet(testData);
     const fn = new Date();
     const time = fn - st;
-    alert(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}\ndoubles: ${net.doubles}`)
+    alert(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}`)
 }
 
 function main(count) {
@@ -168,7 +171,7 @@ function main(count) {
         initVertexes.push(String.fromCharCode(65 + i))
     }
 
-    drawGraph(initVertexes, [])
+    drawGraph(initVertexes)
 
     cy.nodes().on('drag', () => drawSteinerNet());
     drawSteinerNet();
