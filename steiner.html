@@ -1,56 +1,72 @@
 <html>
 <style>
 
-  body {
-    font: 14px helvetica neue, helvetica, arial, sans-serif;
-  }
+    body {
+        font: 14px helvetica neue, helvetica, arial, sans-serif;
+    }
 
-  .absolute-full {
-    height: 100%;
-    width: 100%;
-    position: absolute;
-  }
+    .root-element {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        width: 100%;
+        height: 100%
+    }
 
-  .control-button {
-    margin: 10px;
-    width: 50px;
-    height: 30px;
-    font-size: 20px;
-  }
+    .graph-panel {
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
 
-  .benchmark-button {
-    margin: 10px;
-    height: 30px;
-    font-size: 20px;
-  }
+    .graph-panel-wrapper {
+        flex: auto;
+        display: block;
+    }
 
-  .weight-label {
-    margin: 10px;
-    height: 30px;
-    font-size: 20px;
-  }
+    .control-button {
+        margin: 10px;
+        width: 50px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+    .benchmark-button {
+        margin: 10px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+    .weight-label {
+        margin: 10px;
+        height: 30px;
+        font-size: 20px;
+    }
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.5/cytoscape.js"></script>
 <script src="./alg.js"></script>
 
-<div class="absolute-full">
-  <div>
-    <input type="button" value="+" class="control-button" onclick="addVertex()">
 
-    <input type="button" value="-" class="control-button" onclick="removeVertex()">
+<div class="root-element">
+    <div>
+        <input type="button" value="+" class="control-button" onclick="addVertex()">
 
-    <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
+        <input type="button" value="-" class="control-button" onclick="removeVertex()">
+        <input type="button" value="-" class="control-button" onclick="removeVertex()">
 
-    <span id="weight_label" class="weight-label"></span>
-  </div>
+        <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
+
+        <span id="weight_label" class="weight-label"></span>
+    </div>
 
 
-  <div id="cy" class="absolute-full">
-
-  </div>
+    <div class="graph-panel-wrapper">
+        <div id="cy" class="graph-panel"></div>
+    </div>
 
 </div>
+
 
 <script src="./gui.js"></script>
 
