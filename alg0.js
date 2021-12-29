@@ -1,12 +1,12 @@
-function findOptimalSteinerNet(positions) {
-    const slns = steiner(positions);
-    return slns.reduce((acc, s) => {
+
+function reduceOptNet(nets) {
+    return nets.reduce((acc, s) => {
         const w = evalWeigth(s);
 
-        if (!acc || acc.w > w) {
+        if (!acc || acc.weight > w) {
             return {
-                s: s,
-                w: w
+                optimalNet: s,
+                weight: w,
             }
         } else {
             return acc
@@ -14,7 +14,15 @@ function findOptimalSteinerNet(positions) {
     }, null)
 }
 
-const select1 = ls => {
+function findOptimalSteinerNet(positions) {
+    const slns = steiner(positions);
+    const res = reduceOptNet(slns)
+    res.count = slns.length;
+    //res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
+    return res;
+}
+
+function select1(ls) {
     const res = []
     for (let i = 0; i < ls.length; i++) {
         const cp = [...ls];
@@ -27,7 +35,7 @@ const select1 = ls => {
     return res;
 }
 
-const select2 = ls => {
+function select2(ls) {
     const res = []
     for (let i = 0; i < ls.length; i++) {
         for (let j = i; j < ls.length - 1; j++) {
@@ -44,15 +52,35 @@ const select2 = ls => {
     return res;
 }
 
-const getVertEdges = (v, net) => {
+function getVertEdges(v, net) {
     return net.es.filter(e => e.from.id === v.id || e.to.id === v.id)
 }
 
-const isAddable = (cur, v, net) => {
+function cosEdgesAngle(a, b) {
+    const ax = a.to.pos.x - a.from.pos.x;
+    const ay = a.to.pos.y - a.from.pos.y;
+
+    const bx = b.to.pos.x - b.from.pos.x;
+    const by = b.to.pos.y - b.from.pos.y;
+
+    return (ax * bx + ay * by) / Math.sqrt((ax * ax + ay * ay) * (bx * bx + by * by))
+}
+
+function normEdgeDir(e, vFrom) {
+    if (e.from.id === vFrom.id) {
+        return e;
+    } else {
+        return {from: e.to, to: e.from}
+    }
+}
+
+function isAddable(cur, v, net) {
     const es = getVertEdges(v, net)
     if (es.length > 2) return false;
 
-    return true;
+    const curEdge = {from: v, to: cur}
+
+    return !es.some(e => cosEdgesAngle(curEdge, normEdgeDir(e, v)) > -1 / 2 + 0.001)
 }
 
 function evalWeigth(net) {
@@ -85,16 +113,13 @@ function genTriangles(a, b) {
     ]
 }
 
-const genExtVertex = (s1, s2, m, k) => {
+function genExtVertex(s1, s2, m, k) {
 
     const sx = (s1.pos.x + s2.pos.x + m.pos.x) / 3
     const sy = (s1.pos.y + s2.pos.y + m.pos.y) / 3
 
     const mcx = m.pos.x - sx
     const mcy = m.pos.y - sy
-
-    const rsq = mcx * mcx + mcy * mcy
-
 
     const kcx = k.pos.x - sx
     const kcy = k.pos.y - sy
@@ -114,12 +139,15 @@ const genExtVertex = (s1, s2, m, k) => {
 
     return [{
         id: "(" + s1.id + ") - (" + s2.id + ") -> (" + k.id + ")",
-        pos: {
-            x: ex,
-            y: ey
-        }
+        pos: {x: ex, y: ey}
     }]
 
+}
+
+function distSquare(a, b) {
+    const dx = b.pos.x - a.pos.x;
+    const dy = b.pos.y - a.pos.y;
+    return dx * dx + dy * dy;
 }
 
 function steiner(positions) {
@@ -144,16 +172,23 @@ function steiner(positions) {
             const cur = s.selected;
             const vs = s.other;
 
-            return steiner(vs).flatMap(solution => {
-                return vs.filter(v => isAddable(cur, v, solution))
-                    .map(v => ({
-                        vs: solution.vs,
-                        es: [...solution.es, {
-                            from: cur,
-                            to: v
-                        }]
-                    }));
-            })
+            const closest = vs.reduce((acc, i) => {
+                if (!acc) {
+                    return i;
+                }
+                const distOld = distSquare(acc, cur);
+                const distCur = distSquare(i, cur)
+                return distCur < distOld ? i : acc
+            }, null)
+
+            const optNet = findOptimalSteinerNet(vs).optimalNet;
+
+            if (!isAddable(cur, closest, optNet)) return []
+
+            return [{
+                vs: optNet.vs,
+                es: [...optNet.es, {from: cur, to: closest}]
+            }]
         });
 
 
@@ -163,47 +198,49 @@ function steiner(positions) {
             const s2 = s.s2;
             const vs = s.other
 
-
-            return genTriangles(s1, s2).flatMap(m => {
+            const nets = genTriangles(s1, s2).flatMap(m => {
                 return steiner([...vs, m]).flatMap(solution => {
-                    return [...vs, ...solution.vs].flatMap(k => {
-                        return genExtVertex(s1, s2, m, k).map(ext => {
+                    const es = getVertEdges(m, solution)
 
+                    if (es.length !== 1) {
+                        return []
+                    }
+
+                    const k = es[0].from.id !== m.id ? es[0].from : es[0].to
+
+                    return genExtVertex(s1, s2, m, k)
+                        .filter(ext => {
+                            const a1 = {from: ext, to: s1}
+                            const a2 = {from: ext, to: s2}
+                            const c = {from: ext, to: k}
+                            return cosEdgesAngle(a1, a2) < 0 && cosEdgesAngle(a1, c) < 0
+                        })
+                        .map(ext => {
                             return {
-                                vs: [
-                                    ext,
-                                    ...solution.vs
-                                ],
-                                es: [{
-                                    from: s1,
-                                    to: ext
-                                },
-                                    {
-                                        from: s2,
-                                        to: ext
-                                    },
+                                vs: [ext, ...solution.vs],
+                                es: [
+                                    {from: s1, to: ext},
+                                    {from: s2, to: ext},
                                     ...solution.es.map(e => {
                                         if (e.from.id === m.id) {
-                                            return {
-                                                from: ext,
-                                                to: e.to
-                                            }
+                                            return {from: ext, to: e.to}
                                         }
                                         if (e.to.id === m.id) {
-                                            return {
-                                                from: e.from,
-                                                to: ext
-                                            }
+                                            return {from: e.from, to: ext}
                                         }
                                         return e
                                     })
                                 ]
                             }
                         })
-                    })
                 })
             })
 
+            if (nets.length === 0) {
+                return []
+            } else {
+                return [reduceOptNet(nets).optimalNet];
+            }
         })
 
     return [...fstVars, ...sndVars];

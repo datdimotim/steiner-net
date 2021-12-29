@@ -1,6 +1,5 @@
 const alg0 = require('./alg0')
 const alg = require('./alg')
-const tests = require('./testData.json')
 
 const testData = [
     {"id": "A", "pos": {"x": 69.2520325203252, "y": 236.64634146341456}},
@@ -9,27 +8,17 @@ const testData = [
     {"id": "D", "pos": {"x": 756.1626016260163, "y": 363.6382113821138}},
     {"id": "E", "pos": {"x": 863.5284552845529, "y": 793.1016260162602}},
     {"id": "F", "pos": {"x": 243.5772357723577, "y": 133.89837398373976}},
+    {"id": "G", "pos": {"x": 103.5772357723577, "y": 433.89837398373976}},
 ];
 
-for (let i = 0; i < tests.length; i++) {
-    if (!compare(tests[i])) {
-        console.log(`fail: ${i}`)
-        break;
-    } else {
-        console.log(`success: ${i}`)
-    }
-}
+benchmark(testData, alg0.findOptimalSteinerNet)
+console.log("")
+benchmark(testData, alg.findOptimalSteinerNet)
 
-function compare(testData) {
-    const w0 = alg0.findOptimalSteinerNet(testData).w;
-    const w = alg.findOptimalSteinerNet(testData).weight;
 
-    return Math.abs(w0 - w) < 0.001
-}
-
-function benchmark(testData) {
+function benchmark(testData, solver) {
     const st = new Date();
-    const net = alg0.findOptimalSteinerNet(testData);
+    const net = solver(testData);
     const fn = new Date();
     const time = fn - st;
     console.log(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}\ndoubles: ${net.doubles}`)
