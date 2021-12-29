@@ -198,52 +198,49 @@ function steiner(positions) {
       const s2 = s.s2;
       const vs = s.other
 
-      const nets = genTriangles(s1, s2).flatMap(m => {
-        return steiner([...vs, m]).flatMap(solution => {
-          const es = getVertEdges(m, solution)
-
-          if (es.length !== 1) {
-            return []
-          }
-
-          const k = es[0].from.id !== m.id ? es[0].from : es[0].to
-
-          return genExtVertex(s1, s2, m, k)
-            .filter(ext => {
-              const a1 = {from: ext, to: s1}
-              const a2 = {from: ext, to: s2}
-              const c = {from: ext, to: k}
-              return cosEdgesAngle(a1, a2) < 0 && cosEdgesAngle(a1, c) < 0
-            })
-            .map(ext => {
-              return {
-                vs: [ext, ...solution.vs],
-                es: [
-                  {from: s1, to: ext},
-                  {from: s2, to: ext},
-                  ...solution.es.map(e => {
-                    if (e.from.id === m.id) {
-                      return {from: ext, to: e.to}
-                    }
-                    if (e.to.id === m.id) {
-                      return {from: e.from, to: ext}
-                    }
-                    return e
-                  })
-                ]
-              }
-            })
-        })
+      return genTriangles(s1, s2).flatMap(m => {
+        const subNet = findOptimalSteinerNet([...vs, m]).optimalNet;
+        return getBackVertexPair(subNet, m, s1, s2)
       })
-
-      if (nets.length === 0) {
-        return []
-      } else {
-        return [reduceOptNet(nets).optimalNet];
-      }
     })
 
   return [...fstVars, ...sndVars];
+}
+
+function getBackVertexPair(solution, m, s1, s2) {
+    const es = getVertEdges(m, solution)
+
+    if (es.length !== 1) {
+      return []
+    }
+
+    const k = es[0].from.id !== m.id ? es[0].from : es[0].to
+
+    return genExtVertex(s1, s2, m, k)
+        .filter(ext => {
+          const a1 = {from: ext, to: s1}
+          const a2 = {from: ext, to: s2}
+          const c = {from: ext, to: k}
+          return cosEdgesAngle(a1, a2) < 0 && cosEdgesAngle(a1, c) < 0
+        })
+        .map(ext => {
+          return {
+            vs: [ext, ...solution.vs],
+            es: [
+              {from: s1, to: ext},
+              {from: s2, to: ext},
+              ...solution.es.map(e => {
+                if (e.from.id === m.id) {
+                  return {from: ext, to: e.to}
+                }
+                if (e.to.id === m.id) {
+                  return {from: e.from, to: ext}
+                }
+                return e
+              })
+            ]
+          }
+        })
 }
 
 module.exports = {findOptimalSteinerNet}
