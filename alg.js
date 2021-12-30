@@ -143,7 +143,8 @@ function genExtVertex(s1, s2, m, k) {
 
   return [{
     id: "(" + s1.id + ") - (" + s2.id + ") -> (" + k.id + ")",
-    pos: {x: ex, y: ey}
+    pos: {x: ex, y: ey},
+    isFictive: true
   }]
 
 }
