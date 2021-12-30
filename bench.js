@@ -11,10 +11,13 @@ const testData = [
     {"id": "G", "pos": {"x": 103.5772357723577, "y": 433.89837398373976}},
 ];
 
-benchmark(testData, alg0.findOptimalSteinerNet)
-console.log("")
-benchmark(testData, alg.findOptimalSteinerNet)
-
+while (true) {
+    benchmark(testData, alg0.findOptimalSteinerNet)
+    console.log("")
+    benchmark(testData, alg.findOptimalSteinerNet)
+    console.log("=======================")
+    console.log("")
+}
 
 function benchmark(testData, solver) {
     const st = new Date();

@@ -16,6 +16,7 @@ function reduceOptNet(nets) {
 
 function findOptimalSteinerNet(positions) {
   const slns = steiner(positions);
+  if (slns.length === 0) return null;
   const res = reduceOptNet(slns)
   res.count = slns.length;
   //res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
@@ -75,6 +76,7 @@ function normEdgeDir(e, vFrom) {
 }
 
 function isAddable(cur, v, net) {
+  if (v.isFictive) return false;
   const es = getVertEdges(v, net)
   if (es.length > 2) return false;
 
@@ -101,14 +103,16 @@ function genTriangles(a, b) {
     pos: {
       x: a.pos.x + Math.cos(Math.PI / 3) * x - Math.sin(Math.PI / 3) * y,
       y: a.pos.y + Math.sin(Math.PI / 3) * x + Math.cos(Math.PI / 3) * y
-    }
+    },
+    isFictive: true
   },
     {
       id: a.id + "-" + b.id + "-2",
       pos: {
         x: a.pos.x + Math.cos(-Math.PI / 3) * x - Math.sin(-Math.PI / 3) * y,
         y: a.pos.y + Math.sin(-Math.PI / 3) * x + Math.cos(-Math.PI / 3) * y
-      }
+      },
+      isFictive: true
     }
   ]
 }
@@ -181,7 +185,8 @@ function steiner(positions) {
         return distCur < distOld ? i : acc
       }, null)
 
-      const optNet = findOptimalSteinerNet(vs).optimalNet;
+      const optNet = findOptimalSteinerNet(vs)?.optimalNet;
+      if (!optNet) return []
 
       if (!isAddable(cur, closest, optNet)) return []
 
@@ -199,7 +204,8 @@ function steiner(positions) {
       const vs = s.other
 
       return genTriangles(s1, s2).flatMap(m => {
-        const subNet = findOptimalSteinerNet([...vs, m]).optimalNet;
+        const subNet = findOptimalSteinerNet([...vs, m])?.optimalNet;
+        if (!subNet) return []
         return getBackVertexPair(subNet, m, s1, s2)
       })
     })
