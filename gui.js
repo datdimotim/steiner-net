@@ -26,25 +26,16 @@ const cy = cytoscape({
     style: cytoscape.stylesheet()
         .selector('node')
         .css({
-            //'shape': 'data(faveShape)',
-            //'width': 'mapData(40, 40, 80, 20, 60)',
             'content': 'data(name)',
             'text-valign': 'center',
             'text-outline-width': 2,
             'text-outline-color': 'data(faveColor)',
             'background-color': 'data(faveColor)',
-            'color': '#fff'
+            'color': '#fff',
+            'z-index': 'data(zIndex)'
         })
-
-        .selector(':selected')
-        .css({
-            'border-width': 3,
-            'border-color': '#333'
-        })
-
         .selector('edge')
         .css({
-            // 'curve-style': 'bezier',
             'opacity': 0.666,
             'width': 'mapData(strength, 70, 100, 2, 6)',
             'target-arrow-shape': 'triangle',
@@ -53,18 +44,7 @@ const cy = cytoscape({
             'source-arrow-color': 'data(faveColor)',
             'target-arrow-color': 'data(faveColor)',
             'content': 'data(label)'
-        })
-        .selector('edge.questionable')
-        .css({
-            'line-style': 'dotted',
-            'target-arrow-shape': 'diamond'
-        })
-        .selector('.faded')
-        .css({
-            'opacity': 0.25,
-            'text-opacity': 0
         }),
-
     elements: {
         nodes: [],
         edges: []
@@ -81,7 +61,8 @@ const mkVert = i => ({
         id: i,
         name: i,
         faveColor: '#00FF00',
-        isMain: true
+        isMain: true,
+        zIndex: 20
     }
 })
 
@@ -90,7 +71,8 @@ const mkVertExt = i => ({
         id: i.id,
         name: '', //i.id,
         faveColor: '#444444',
-        isMain: false
+        isMain: false,
+        zIndex: 10
     },
     renderedPosition: {
         x: i.pos.x,
