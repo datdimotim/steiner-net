@@ -173,39 +173,32 @@ function steiner(positions) {
   }
 
   const fstVars = select1(positions)
-    .flatMap(s => {
-      const cur = s.selected;
-      const vs = s.other;
-
-      const closest = vs.reduce((acc, i) => {
+    .flatMap(({selected, other}) => {
+      const closest = other.reduce((acc, i) => {
         if (!acc) {
           return i;
         }
-        const distOld = distSquare(acc, cur);
-        const distCur = distSquare(i, cur)
+        const distOld = distSquare(acc, selected);
+        const distCur = distSquare(i, selected)
         return distCur < distOld ? i : acc
       }, null)
 
-      const optNet = findOptimalSteinerNet(vs)?.optimalNet;
+      const optNet = findOptimalSteinerNet(other)?.optimalNet;
       if (!optNet) return []
 
-      if (!isAddable(cur, closest, optNet)) return []
+      if (!isAddable(selected, closest, optNet)) return []
 
       return [{
         vs: optNet.vs,
-        es: [...optNet.es, {from: cur, to: closest}]
+        es: [...optNet.es, {from: selected, to: closest}]
       }]
     });
 
 
   const sndVars = select2(positions)
-    .flatMap(s => {
-      const s1 = s.s1;
-      const s2 = s.s2;
-      const vs = s.other
-
+    .flatMap(({s1, s2, other}) => {
       return genTriangles(s1, s2).flatMap(m => {
-        const subNet = findOptimalSteinerNet([...vs, m])?.optimalNet;
+        const subNet = findOptimalSteinerNet([...other, m])?.optimalNet;
         if (!subNet) return []
         return getBackVertexPair(subNet, m, s1, s2)
       })
