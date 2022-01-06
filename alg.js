@@ -39,13 +39,13 @@ function select1(ls) {
 function select2(ls) {
   const res = []
   for (let i = 0; i < ls.length; i++) {
-    for (let j = i; j < ls.length - 1; j++) {
+    for (let j = 0; j < ls.length - 1; j++) {
       const cp = [...ls];
-      cp.splice(i, 1)
-      cp.splice(j, 1)
+      const s1 = cp.splice(i, 1);
+      const s2 = cp.splice(j, 1);
       res.push({
-        s1: ls[i],
-        s2: ls[j + 1],
+        s1: s1[0],
+        s2: s2[0],
         other: cp
       })
     }
@@ -94,27 +94,19 @@ function evalWeigth(net) {
     .reduce((a, i) => a + i, 0)
 }
 
+// Здесь мы строим 1 доп точку вместо двух, вторая получается перестановкой аргументов
 function genTriangles(a, b) {
   const x = b.pos.x - a.pos.x
   const y = b.pos.y - a.pos.y
 
-  return [{
+  return {
     id: a.id + "-" + b.id + "-1",
     pos: {
       x: a.pos.x + Math.cos(Math.PI / 3) * x - Math.sin(Math.PI / 3) * y,
       y: a.pos.y + Math.sin(Math.PI / 3) * x + Math.cos(Math.PI / 3) * y
     },
     isFictive: true
-  },
-    {
-      id: a.id + "-" + b.id + "-2",
-      pos: {
-        x: a.pos.x + Math.cos(-Math.PI / 3) * x - Math.sin(-Math.PI / 3) * y,
-        y: a.pos.y + Math.sin(-Math.PI / 3) * x + Math.cos(-Math.PI / 3) * y
-      },
-      isFictive: true
-    }
-  ]
+  }
 }
 
 function genExtVertex(s1, s2, m, k) {
@@ -197,11 +189,10 @@ function steiner(positions) {
 
   const sndVars = select2(positions)
     .flatMap(({s1, s2, other}) => {
-      return genTriangles(s1, s2).flatMap(m => {
-        const subNet = findOptimalSteinerNet([...other, m])?.optimalNet;
-        if (!subNet) return []
-        return getBackVertexPair(subNet, m, s1, s2)
-      })
+      const m = genTriangles(s1, s2);
+      const subNet = findOptimalSteinerNet([...other, m])?.optimalNet;
+      if (!subNet) return []
+      return getBackVertexPair(subNet, m, s1, s2)
     })
 
   return [...fstVars, ...sndVars];
