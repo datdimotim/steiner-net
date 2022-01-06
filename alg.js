@@ -175,6 +175,8 @@ function steiner(positions) {
         return distCur < distOld ? i : acc
       }, null)
 
+      if (closest.isFictive) return []
+
       const optNet = findOptimalSteinerNet(other)?.optimalNet;
       if (!optNet) return []
 

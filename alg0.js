@@ -16,6 +16,7 @@ function reduceOptNet(nets) {
 
 function findOptimalSteinerNet(positions) {
     const slns = steiner(positions);
+    if (slns.length === 0) return null;
     const res = reduceOptNet(slns)
     res.count = slns.length;
     //res.doubles = slns.filter(s => Math.floor(evalWeigth(s)) === Math.floor(res.weight)).length
@@ -38,13 +39,13 @@ function select1(ls) {
 function select2(ls) {
     const res = []
     for (let i = 0; i < ls.length; i++) {
-        for (let j = i; j < ls.length - 1; j++) {
+        for (let j = 0; j < ls.length - 1; j++) {
             const cp = [...ls];
-            cp.splice(i, 1)
-            cp.splice(j, 1)
+            const s1 = cp.splice(i, 1);
+            const s2 = cp.splice(j, 1);
             res.push({
-                s1: ls[i],
-                s2: ls[j + 1],
+                s1: s1[0],
+                s2: s2[0],
                 other: cp
             })
         }
@@ -75,6 +76,7 @@ function normEdgeDir(e, vFrom) {
 }
 
 function isAddable(cur, v, net) {
+    if (v.isFictive) return false;
     const es = getVertEdges(v, net)
     if (es.length > 2) return false;
 
@@ -92,25 +94,19 @@ function evalWeigth(net) {
         .reduce((a, i) => a + i, 0)
 }
 
+// Здесь мы строим 1 доп точку вместо двух, вторая получается перестановкой аргументов
 function genTriangles(a, b) {
     const x = b.pos.x - a.pos.x
     const y = b.pos.y - a.pos.y
 
-    return [{
+    return {
         id: a.id + "-" + b.id + "-1",
         pos: {
             x: a.pos.x + Math.cos(Math.PI / 3) * x - Math.sin(Math.PI / 3) * y,
             y: a.pos.y + Math.sin(Math.PI / 3) * x + Math.cos(Math.PI / 3) * y
-        }
-    },
-        {
-            id: a.id + "-" + b.id + "-2",
-            pos: {
-                x: a.pos.x + Math.cos(-Math.PI / 3) * x - Math.sin(-Math.PI / 3) * y,
-                y: a.pos.y + Math.sin(-Math.PI / 3) * x + Math.cos(-Math.PI / 3) * y
-            }
-        }
-    ]
+        },
+        isFictive: true
+    }
 }
 
 function genExtVertex(s1, s2, m, k) {
@@ -139,7 +135,8 @@ function genExtVertex(s1, s2, m, k) {
 
     return [{
         id: "(" + s1.id + ") - (" + s2.id + ") -> (" + k.id + ")",
-        pos: {x: ex, y: ey}
+        pos: {x: ex, y: ey},
+        isFictive: true
     }]
 
 }
@@ -168,40 +165,34 @@ function steiner(positions) {
     }
 
     const fstVars = select1(positions)
-        .flatMap(s => {
-            const cur = s.selected;
-            const vs = s.other;
-
-            const closest = vs.reduce((acc, i) => {
+        .flatMap(({selected, other}) => {
+            const closest = other.reduce((acc, i) => {
                 if (!acc) {
                     return i;
                 }
-                const distOld = distSquare(acc, cur);
-                const distCur = distSquare(i, cur)
+                const distOld = distSquare(acc, selected);
+                const distCur = distSquare(i, selected)
                 return distCur < distOld ? i : acc
             }, null)
 
-            const optNet = findOptimalSteinerNet(vs).optimalNet;
+            const optNet = findOptimalSteinerNet(other)?.optimalNet;
+            if (!optNet) return []
 
-            if (!isAddable(cur, closest, optNet)) return []
+            if (!isAddable(selected, closest, optNet)) return []
 
             return [{
                 vs: optNet.vs,
-                es: [...optNet.es, {from: cur, to: closest}]
+                es: [...optNet.es, {from: selected, to: closest}]
             }]
         });
 
 
     const sndVars = select2(positions)
-        .flatMap(s => {
-            const s1 = s.s1;
-            const s2 = s.s2;
-            const vs = s.other
-
-            return genTriangles(s1, s2).flatMap(m => {
-                const subNet = findOptimalSteinerNet([...vs, m]).optimalNet;
-                return getBackVertexPair(subNet, m, s1, s2)
-            })
+        .flatMap(({s1, s2, other}) => {
+            const m = genTriangles(s1, s2);
+            const subNet = findOptimalSteinerNet([...other, m])?.optimalNet;
+            if (!subNet) return []
+            return getBackVertexPair(subNet, m, s1, s2)
         })
 
     return [...fstVars, ...sndVars];
