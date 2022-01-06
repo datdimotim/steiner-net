@@ -1,4 +1,3 @@
-const alg0 = require('./alg0')
 const alg = require('./alg')
 
 const testData = [
@@ -12,8 +11,6 @@ const testData = [
 ];
 
 while (true) {
-    benchmark(testData, alg0.findOptimalSteinerNet)
-    console.log("")
     benchmark(testData, alg.findOptimalSteinerNet)
     console.log("=======================")
     console.log("")
