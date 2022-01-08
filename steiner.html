@@ -1,69 +1,207 @@
-<html>
-<style>
+<head>
+    <style>
+        #userRoot {
+            background: gray;
+            height: 600px;
+            width: 100%;
+        }
 
-    body {
-        font: 14px helvetica neue, helvetica, arial, sans-serif;
-    }
+        .row {
+            display: table;
+        }
+        .column {
+            display: table-cell;
 
-    .root-element {
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        width: 100%;
-        height: 100%
-    }
+        }
+    </style>
 
-    .graph-panel {
-        width: 100%;
-        height: 100%;
-        position: relative;
-    }
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/themes/overcast/jquery-ui.css" rel="stylesheet" media="print">
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script
+            src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"
+            integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw="
+            crossorigin="anonymous"></script>
+</head>
 
-    .graph-panel-wrapper {
-        flex: auto;
-        display: block;
-    }
+<div>
+    <div>pre<br>pre2 </div>
 
-    .control-button {
-        margin: 10px;
-        width: 50px;
-        height: 30px;
-        font-size: 20px;
-    }
+    <div class="row">
+        <div class="column"> left </div>
 
-    .benchmark-button {
-        margin: 10px;
-        height: 30px;
-        font-size: 20px;
-    }
+        <div id="userRoot" class="column"></div>
 
-    .weight-label {
-        margin: 10px;
-        height: 30px;
-        font-size: 20px;
-    }
+        <div class="column"> right</div>
 
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
-<script src="./alg.js"></script>
-
-
-<div class="root-element">
-    <div>
-        <input type="button" value="+" class="control-button" onclick="addVertex()">
-        <input type="button" value="-" class="control-button" onclick="removeVertex()">
-        <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
-        <span id="weight_label" class="weight-label"></span>
     </div>
 
-
-    <div class="graph-panel-wrapper">
-        <div id="cy" class="graph-panel"></div>
-    </div>
-
+    <div>post</div>
 </div>
 
+<script>
+    const data = {
+        parentElementSelector: '#userRoot',
+        nodes: [
+            {
+                id: 'id-1',
+                label: 'A',
+                pos: {
+                    x: 60,
+                    y: 60
+                }
+            },
+            {
+                id: 'id-2',
+                label: 'B'
+            },
+            {
+                id: 'id-3',
+                label: 'C'
+            }
+        ],
+        edges: [
+            {
+                from: 'id-1',
+                to: 'id-2'
+            },
+            {
+                from: 'id-1',
+                to: 'id-3'
+            }
+        ]
+    }
 
-<script src="./gui.js"></script>
+    const nodeSizePx = 20;
 
-</html>
+    mkCssClasses();
+
+    mkGraph(data);
+
+    function mkGraph({
+                         parentElementSelector,
+                         nodes,
+                         edges,
+                     }) {
+        const parentElement = $(parentElementSelector);
+        if (!parentElement) {
+            throw `parentElement not found by selector: ${parentElementSelector}`;
+        }
+
+        parentElement.append(`<div class="rootPane"></div>`)
+
+        const rootPane = $(`${parentElementSelector} .rootPane`);
+
+        const rootDimensions = getRootPaneDimensions(rootPane);
+
+        rootPane.append(`
+        <svg class="svg">
+          ${edges.map(mkEdge).join('')}
+        </svg>
+        ${nodes.map(n => mkNode(n, rootDimensions)).join('')}
+  `)
+
+        nodes.forEach(setNodeDraggable)
+        redraw(edges);
+
+        //////// END ////////////
+
+        function setNodeDraggable(node) {
+            const el = $(`#${node.id}`)
+            el.draggable({
+                drag: dragListener
+            });
+        }
+
+        function dragListener() {
+            redraw(edges);
+        }
+    }
+
+    function getRootPaneDimensions(rootPane) {
+        return {
+            x: rootPane.width() - nodeSizePx,
+            y: rootPane.height() - nodeSizePx
+        }
+    }
+
+    function mkNode(node, bounds) {
+        const x = node.pos?.x || Math.random() * bounds.x;
+        const y = node.pos?.y || Math.random() * bounds.y;
+        return `<div id="${node.id}" class="point" style="left: ${x}px; top: ${y}px">${node.label}</div>`;
+    }
+
+    function mkCssClasses() {
+        const style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = `
+    .rootPane {
+      position: relative;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+
+    .svg{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .line{
+      stroke-width:2px;
+      stroke:rgb(0,0,0);
+    }
+
+    .point{
+      width: ${nodeSizePx}px;
+      height: ${nodeSizePx}px;
+      border-radius: ${nodeSizePx}px;
+      background: red;
+      position: absolute;
+      text-align: center;
+      cursor: default;
+     }
+  `;
+        document.getElementsByTagName('head')[0].appendChild(style);
+    }
+
+    function mkEdge({
+                        from,
+                        to
+                    }) {
+        return `<line id="${from}${to}" class="line"/>`
+    }
+
+    function redraw(edges) {
+        edges.forEach(({
+                           from,
+                           to
+                       }) => {
+            const aEl = $(`#${from}`)
+            const bEl = $(`#${to}`)
+            const a = getCenter(aEl);
+            const b = getCenter(bEl);
+            const line = $(`#${from}${to}`)
+            line.attr('x1', a.x).attr('y1', a.y).attr('x2', b.x).attr('y2', b.y);
+        });
+    }
+
+    function getTop(el) {
+        return parseInt(el.css('top'), 10);
+    }
+
+    function getLeft(el) {
+        return parseInt(el.css('left'), 10);
+    }
+
+    function getCenter(el) {
+        return {
+            x: getLeft(el) + (el.width() / 2),
+            y: getTop(el) + (el.height() / 2)
+        }
+    }
+
+</script>
+
