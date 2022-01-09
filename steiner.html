@@ -68,7 +68,7 @@
         ]
     }
 
-    const nodeSizePx = 20;
+    const nodeSizePx = 50;
 
     mkCssClasses();
 
@@ -124,7 +124,7 @@
     function mkNode(node, bounds) {
         const x = node.pos?.x || Math.random() * bounds.x;
         const y = node.pos?.y || Math.random() * bounds.y;
-        return `<div id="${node.id}" class="point" style="left: ${x}px; top: ${y}px">${node.label}</div>`;
+        return `<div id="${node.id}" class="point" style="left: ${x}px; top: ${y}px"><div>${node.label}</div></div>`;
     }
 
     function mkCssClasses() {
@@ -159,6 +159,9 @@
       position: absolute;
       text-align: center;
       cursor: default;
+      display: flex;
+      justify-content: center;
+      align-items: center;
      }
   `;
         document.getElementsByTagName('head')[0].appendChild(style);
