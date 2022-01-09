@@ -160,6 +160,7 @@ function main(count) {
 }
 
 function drawSteinerNet() {
+    return;
     clearComputedElements();
     const positions = cy.elements('node[isMain]').map(v => ({
         id: v.id(),
