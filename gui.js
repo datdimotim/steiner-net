@@ -1,130 +1,42 @@
+const graphsLib = svgGraphsLib();
+
+const graph = graphsLib.mkGraph({
+    parentElementSelector: '#graph-root',
+    onDrag: () => {
+        evalAndShowNet();
+    }
+});
+
+const graphExt = graphsLib.mkGraph({
+    parentElementSelector: '#ext-graph-root',
+    onDrag: () => {}
+});
+
+function evalAndShowNet() {
+    const nodes = graph.getNodes().filter(n => !n.isFixed);
+    const net = findOptimalSteinerNet(nodes);
+
+    graphExt.drawGraph({
+        nodes: [...net.optimalNet.vs.map(n => ({...n, isFixed: true})), ...nodes],
+        edges: net.optimalNet.es.map(({from, to}) => ({from: from.id, to: to.id}))
+    })
+
+    document.getElementById("weight_label").innerText = `Weight: ${Math.floor(net.weight)}`
+}
+
 var vertexCount = 4;
 
 function addVertex() {
-    clearAll();
     vertexCount++;
     main(vertexCount)
 }
 
 function removeVertex() {
-    clearAll();
     vertexCount--;
     if (vertexCount < 1) {
         vertexCount = 1
     }
     main(vertexCount)
-}
-
-const cy = cytoscape({
-    container: document.getElementById('cy'),
-
-    layout: {
-        name: 'random',
-        padding: 10
-    },
-
-    style: cytoscape.stylesheet()
-        .selector('node')
-        .css({
-            'content': 'data(name)',
-            'text-valign': 'center',
-            'text-outline-width': 2,
-            'text-outline-color': 'data(faveColor)',
-            'background-color': 'data(faveColor)',
-            'color': '#fff',
-            'z-index': 'data(zIndex)'
-        })
-        .selector('edge')
-        .css({
-            'opacity': 0.666,
-            'width': 'mapData(strength, 70, 100, 2, 6)',
-            'target-arrow-shape': 'triangle',
-            'source-arrow-shape': 'circle',
-            'line-color': 'data(faveColor)',
-            'source-arrow-color': 'data(faveColor)',
-            'target-arrow-color': 'data(faveColor)',
-            'content': 'data(label)'
-        }),
-    elements: {
-        nodes: [],
-        edges: []
-    },
-
-    ready: function () {
-        window.cy = this;
-    }
-});
-
-
-const mkVert = i => ({
-    data: {
-        id: i,
-        name: i,
-        faveColor: '#00FF00',
-        isMain: true,
-        zIndex: 20
-    }
-})
-
-const mkVertExt = i => ({
-    data: {
-        id: i.id,
-        name: '', //i.id,
-        faveColor: '#444444',
-        isMain: false,
-        zIndex: 10
-    },
-    renderedPosition: {
-        x: i.pos.x,
-        y: i.pos.y
-    }
-})
-
-const mkEdge = (a, b, label) => ({
-    data: {
-        source: a,
-        target: b,
-        faveColor: '#6FB1FC',
-        strength: 90,
-        label: label
-    }
-})
-
-
-const drawGraph = (vs) => {
-    vs.forEach(v => {
-        cy.add(mkVert(v))
-    })
-
-    const layout = cy.layout({
-        name: 'random'
-    });
-
-    layout.run();
-}
-
-const drawExt = (vs, es) => {
-    vs.forEach(v => {
-        cy.add(mkVertExt(v))
-    })
-    es.forEach(e => {
-        const dx = e.from.pos.x - e.to.pos.x;
-        const dy = e.from.pos.y - e.to.pos.y;
-        const w = Math.sqrt(dx*dx+dy*dy)
-        cy.add(mkEdge(e.from.id, e.to.id, Math.floor(w)))
-    })
-    cy.elements('node[!isMain]').lock()
-}
-
-
-const clearComputedElements = () => {
-    cy.remove(cy.elements('node[!isMain]'));
-    cy.remove(cy.elements('edge'));
-}
-
-function clearAll() {
-    cy.remove(cy.elements('node'));
-    cy.remove(cy.elements('edge'));
 }
 
 main(vertexCount)
@@ -147,28 +59,27 @@ function benchmark() {
     alert(`time: ${time}\ncount: ${net.count}\nweight: ${Math.floor(net.weight)}`)
 }
 
+
 function main(count) {
     const initVertexes = []
     for (let i = 0; i < count; i++) {
         initVertexes.push(String.fromCharCode(65 + i))
     }
 
-    drawGraph(initVertexes)
 
-    cy.nodes().on('drag', () => drawSteinerNet());
-    drawSteinerNet();
+    const nodes = initVertexes.map(v =>
+        ({
+            id: `id-${v}`,
+            label: v,
+            style: 'background: green',
+            isFixed: false
+        })
+    );
+
+    graph.drawGraph({nodes: nodes, edges: []})
+    evalAndShowNet();
 }
 
-function drawSteinerNet() {
-    clearComputedElements();
-    const positions = cy.elements('node[isMain]').map(v => ({
-        id: v.id(),
-        pos: v.renderedPosition()
-    }))
 
-    const opt = findOptimalSteinerNet(positions);
 
-    drawExt(opt.optimalNet.vs, opt.optimalNet.es);
 
-    document.getElementById("weight_label").innerText = `Weight: ${Math.floor(opt.weight)}`
-}

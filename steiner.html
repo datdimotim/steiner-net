@@ -1,84 +1,76 @@
-<head>
-    <style>
-        #userRoot {
-            background: gray;
-            height: 600px;
-            width: 100%;
-        }
+<html>
+<style>
 
-        .row {
-            display: table;
-        }
-        .column {
-            display: table-cell;
-
-        }
-    </style>
-
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
-    <script src="svg-graph.js"></script>
-</head>
-
-<div>
-    <div>pre<br>pre2 </div>
-
-    <div class="row">
-        <div class="column"> left </div>
-
-        <div id="userRoot" class="column"></div>
-
-        <div class="column"> right</div>
-
-    </div>
-
-    <div>post</div>
-</div>
-
-<script>
-    const data = {
-        parentElementSelector: '#userRoot',
-        nodes: [
-            {
-                id: 'id-1',
-                label: 'A',
-                pos: {
-                    x: 60,
-                    y: 60
-                },
-                style: 'background: green',
-                isFixed: true
-            },
-            {
-                id: 'id-2',
-                label: 'B'
-            },
-            {
-                id: 'id-3',
-                label: 'C'
-            }
-        ],
-        edges: [
-            {
-                from: 'id-1',
-                to: 'id-2'
-            },
-            {
-                from: 'id-1',
-                to: 'id-3'
-            }
-        ]
+    body {
+        font: 14px helvetica neue, helvetica, arial, sans-serif;
     }
 
-    const graph = mkGraph(data);
-    console.log(graph.getNodes());
+    .root-element {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        width: 100%;
+        height: 100%
+    }
 
-    setTimeout(() => {
-        graph.clear();
-    },10000)
+    .graph-panel {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    }
+
+    .graph-panel-wrapper {
+        flex: auto;
+        display: block;
+        position: relative;
+    }
+
+    .control-button {
+        margin: 10px;
+        width: 50px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+    .benchmark-button {
+        margin: 10px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+    .weight-label {
+        margin: 10px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+</style>
 
 
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+<script src="svg-graph.js"></script>
+<script src="./alg.js"></script>
 
-</script>
+<div class="root-element">
+    <div>
+        <input type="button" value="+" class="control-button" onclick="addVertex()">
+        <input type="button" value="-" class="control-button" onclick="removeVertex()">
+        <input type="button" value="Benchmark" class="benchmark-button" onclick="benchmark()">
+        <span id="weight_label" class="weight-label"></span>
+    </div>
+
+
+    <div class="graph-panel-wrapper">
+        <div id="ext-graph-root" class="graph-panel"></div>
+        <div id="graph-root" class="graph-panel"></div>
+    </div>
+
+</div>
+
+
+<script src="./gui.js"></script>
+
+</html>
 
