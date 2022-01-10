@@ -236,4 +236,8 @@ function getBackVertexPair(solution, m, s1, s2) {
         })
 }
 
-module.exports = {findOptimalSteinerNet}
+try {
+  module.exports = {findOptimalSteinerNet}
+} catch (e) {
+
+}
