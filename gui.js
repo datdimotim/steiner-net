@@ -17,7 +17,10 @@ function evalAndShowNet() {
     const net = findOptimalSteinerNet(nodes);
 
     graphExt.drawGraph({
-        nodes: [...net.optimalNet.vs.map(n => ({...n, isFixed: true})), ...nodes],
+        nodes: [
+            ...net.optimalNet.vs.map(n => ({...n, isFixed: true})),
+            ...nodes.map(n => ({...n, style: 'display: none;'}))
+        ],
         edges: net.optimalNet.es.map(({from, to}) => ({from: from.id, to: to.id}))
     })
 
