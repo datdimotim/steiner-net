@@ -162,8 +162,8 @@ function svgGraphsLib (){
             }
 
             function dragListener() {
-                onDrag()
                 redraw(edges);
+                setTimeout(() => onDrag(), 0)
             }
 
         }
