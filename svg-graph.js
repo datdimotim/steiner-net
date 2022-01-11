@@ -26,8 +26,8 @@ function svgGraphsLib (){
     }
 
     function mkNode(node, bounds) {
-        const x = node.pos?.x || Math.random() * bounds.x;
-        const y = node.pos?.y || Math.random() * bounds.y;
+        const x = isNaN(node.pos?.x) ? Math.random() * bounds.x : node.pos?.x
+        const y = isNaN(node.pos?.y) ? Math.random() * bounds.y : node.pos?.y
         const style = node.style || '';
         return `<div id="${node.id}" class="point" style="left: ${x}px; top: ${y}px; ${style}"><div>${node.label || ''}</div></div>`;
     }
