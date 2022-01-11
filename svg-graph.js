@@ -1,7 +1,7 @@
 function svgGraphsLib (){
     const nodeSizePx = 50;
 
-    mkCssClasses();
+    const css = mkCssClasses();
 
     function createUUID() {
         // http://www.ietf.org/rfc/rfc4122.txt
@@ -29,21 +29,28 @@ function svgGraphsLib (){
         const x = isNaN(node.pos?.x) ? Math.random() * bounds.x : node.pos?.x
         const y = isNaN(node.pos?.y) ? Math.random() * bounds.y : node.pos?.y
         const style = node.style || '';
-        return `<div id="${node.id}" class="point" style="left: ${x}px; top: ${y}px; ${style}"><div>${node.label || ''}</div></div>`;
+        return `<div id="${node.id}" class="${css.point}" style="left: ${x}px; top: ${y}px; ${style}"><div>${node.label || ''}</div></div>`;
     }
 
     function mkCssClasses() {
+        const styleSuff = createUUID();
+        const classes = {
+            rootPane: `rootPane-${styleSuff}`,
+            svg: `svg-${styleSuff}`,
+            line: `line-${styleSuff}`,
+            point: `point-${styleSuff}`
+        }
         const style = document.createElement('style');
         style.type = 'text/css';
         style.innerHTML = `
-            .rootPane {
+            .${classes.rootPane} {
               position: relative;
               overflow: hidden;
               height: 100%;
               width: 100%;
             }
 
-            .svg{
+            .${classes.svg} {
               position: absolute;
               top: 0;
               left: 0;
@@ -51,12 +58,12 @@ function svgGraphsLib (){
               height: 100%;
             }
 
-            .line{
+            .${classes.line} {
               stroke-width:2px;
               stroke:rgb(0,0,0);
             }
 
-            .point{
+            .${classes.point} {
               width: ${nodeSizePx}px;
               height: ${nodeSizePx}px;
               border-radius: ${nodeSizePx}px;
@@ -70,13 +77,14 @@ function svgGraphsLib (){
              }
           `;
         document.getElementsByTagName('head')[0].appendChild(style);
+        return classes;
     }
 
     function mkEdge({
                         from,
                         to
                     }) {
-        return `<line id="${from}${to}" class="line"/>`
+        return `<line id="${from}${to}" class="${css.line}"/>`
     }
 
     function redraw(edges) {
@@ -136,14 +144,14 @@ function svgGraphsLib (){
 
             parentElement.empty();
 
-            parentElement.append(`<div class="rootPane"></div>`)
+            parentElement.append(`<div class="${css.rootPane}"></div>`)
 
-            const rootPane = $(`${parentElementSelector} .rootPane`);
+            const rootPane = $(`${parentElementSelector} .${css.rootPane}`);
 
             const rootDimensions = getRootPaneDimensions(rootPane);
 
             rootPane.append(`
-                <svg class="svg">
+                <svg class="${css.svg}">
                     ${edges.map(mkEdge).join('')}
                 </svg>
                 ${nodes.map(n => mkNode(n, rootDimensions)).join('')}
