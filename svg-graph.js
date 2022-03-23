@@ -1,4 +1,4 @@
-function svgGraphsLib (){
+function svgGraphsLib() {
     const nodeSizePx = 50;
 
     const css = mkCssClasses();
@@ -20,8 +20,8 @@ function svgGraphsLib (){
 
     function getRootPaneDimensions(rootPane) {
         return {
-            x: rootPane.width() - nodeSizePx,
-            y: rootPane.height() - nodeSizePx
+            x: rootPane.clientWidth - nodeSizePx,
+            y: rootPane.clientHeight - nodeSizePx
         }
     }
 
@@ -92,32 +92,35 @@ function svgGraphsLib (){
                            from,
                            to
                        }) => {
-            const aEl = $(`#${from}`)
-            const bEl = $(`#${to}`)
+            const aEl = document.getElementById(from)
+            const bEl = document.getElementById(to)
             const a = getCenter(aEl);
             const b = getCenter(bEl);
-            const line = $(`#${from}${to}`)
-            line.attr('x1', a.x).attr('y1', a.y).attr('x2', b.x).attr('y2', b.y);
+            const line = document.getElementById(`${from}${to}`)
+            line.setAttribute("x1", a.x)
+            line.setAttribute("y1", a.y)
+            line.setAttribute("x2", b.x)
+            line.setAttribute("y2", b.y)
         });
     }
 
     function getTop(el) {
-        return parseInt(el.css('top'), 10);
+        return parseInt(el.style.top, 10);
     }
 
     function getLeft(el) {
-        return parseInt(el.css('left'), 10);
+        return parseInt(el.style.left, 10);
     }
 
     function getCenter(el) {
         return {
-            x: getLeft(el) + (el.width() / 2),
-            y: getTop(el) + (el.height() / 2)
+            x: getLeft(el) + (parseFloat(window.getComputedStyle(el).width) / 2),
+            y: getTop(el) + (parseFloat(window.getComputedStyle(el).height) / 2)
         }
     }
 
     function mkGraph({parentElementSelector, onDrag}) {
-        const parentElement = $(parentElementSelector);
+        const parentElement = document.querySelector(parentElementSelector);
 
         if (!parentElement) { // TODO: now not working
             throw `parentElement not found by selector: ${parentElementSelector}`;
@@ -142,36 +145,30 @@ function svgGraphsLib (){
             nodes = data.nodes.map(n => ({...n, id: userIdLibIdMap[n.id]}));
             edges = data.edges.map(e => ({from: userIdLibIdMap[e.from], to: userIdLibIdMap[e.to]}))
 
-            parentElement.empty();
+            parentElement.innerHTML = `<div class="${css.rootPane}"></div>`
 
-            parentElement.append(`<div class="${css.rootPane}"></div>`)
-
-            const rootPane = $(`${parentElementSelector} .${css.rootPane}`);
+            const rootPane = document.querySelector(`${parentElementSelector} .${css.rootPane}`);
 
             const rootDimensions = getRootPaneDimensions(rootPane);
 
-            rootPane.append(`
+            rootPane.innerHTML = `
                 <svg class="${css.svg}">
                     ${edges.map(mkEdge).join('')}
                 </svg>
                 ${nodes.map(n => mkNode(n, rootDimensions)).join('')}
-            `)
+            `
 
             nodes.filter(n => !n.isFixed).forEach(setNodeDraggable)
             redraw(edges);
 
             function setNodeDraggable(node) {
-                const el = $(`#${node.id}`)
-                el.draggable({
-                    drag: dragListener,
-                    start: dragListener,
-                    stop: dragListener
-                });
+                const el = document.getElementById(node.id)
+                dragElement(el, rootPane, dragListener)
             }
 
             function dragListener() {
                 redraw(edges);
-                setTimeout(() => onDrag(), 0)
+                onDrag()
             }
 
         }
@@ -179,7 +176,7 @@ function svgGraphsLib (){
         return {
             getNodes: () =>
                 nodes.map(n => {
-                        const el = $(`#${n.id}`)
+                        const el = document.getElementById(n.id)
                         return {
                             ...n, pos: {
                                 x: getLeft(el),
@@ -195,5 +192,41 @@ function svgGraphsLib (){
 
     return {
         mkGraph: mkGraph
+    }
+
+    function dragElement(elmnt, root, listener) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        elmnt.onmousedown = dragMouseDown;
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // get the mouse cursor position at startup:
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            root.onmouseup = closeDragElement;
+            // call a function whenever the cursor moves:
+            root.onmousemove = elementDrag;
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // calculate the new cursor position:
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            // set the element's new position:
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            listener();
+        }
+
+        function closeDragElement() {
+            // stop moving when mouse button is released:
+            root.onmouseup = null;
+            root.onmousemove = null;
+        }
     }
 }
