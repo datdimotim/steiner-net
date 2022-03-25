@@ -197,6 +197,7 @@ function svgGraphsLib() {
     function dragElement(elmnt, root, listener) {
         let deffered = null;
         elmnt.onmousedown = dragMouseDown;
+        elmnt.ontouchstart = dragMouseDown;
         let dx = 0
         let dy = 0
 
@@ -204,7 +205,9 @@ function svgGraphsLib() {
             e = e || window.event;
             e.preventDefault();
             root.onmouseup = closeDragElement;
+            root.ontouchend = closeDragElement;
             root.onmousemove = elementDrag;
+            root.ontouchmove = elementDrag;
             dx = e.clientX - parseFloat(elmnt.style.left);
             dy = e.clientY - parseFloat(elmnt.style.top);
         }
@@ -225,7 +228,9 @@ function svgGraphsLib() {
 
         function closeDragElement() {
             root.onmouseup = null;
+            root.ontouchend = null;
             root.onmousemove = null;
+            root.ontouchmove = null;
         }
     }
 }
