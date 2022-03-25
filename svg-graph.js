@@ -195,36 +195,35 @@ function svgGraphsLib() {
     }
 
     function dragElement(elmnt, root, listener) {
-        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        let deffered = null;
         elmnt.onmousedown = dragMouseDown;
+        let dx = 0
+        let dy = 0
 
         function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
-            // get the mouse cursor position at startup:
-            pos3 = e.clientX;
-            pos4 = e.clientY;
             root.onmouseup = closeDragElement;
-            // call a function whenever the cursor moves:
             root.onmousemove = elementDrag;
+            dx = e.clientX - parseFloat(elmnt.style.left);
+            dy = e.clientY - parseFloat(elmnt.style.top);
         }
 
         function elementDrag(e) {
             e = e || window.event;
             e.preventDefault();
-            // calculate the new cursor position:
-            pos1 = pos3 - e.clientX;
-            pos2 = pos4 - e.clientY;
-            pos3 = e.clientX;
-            pos4 = e.clientY;
-            // set the element's new position:
-            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            listener();
+            const x = e.clientX - dx;
+            const y = e.clientY - dy;
+
+            clearTimeout(deffered)
+            deffered = setTimeout(() => {
+                elmnt.style.top = y + "px";
+                elmnt.style.left = x + "px";
+                listener();
+            }, 0)
         }
 
         function closeDragElement() {
-            // stop moving when mouse button is released:
             root.onmouseup = null;
             root.onmousemove = null;
         }

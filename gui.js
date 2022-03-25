@@ -1,8 +1,10 @@
 const graphsLib = svgGraphsLib();
 
+let n = 0;
 const graph = graphsLib.mkGraph({
     parentElementSelector: '#graph-root',
     onDrag: () => {
+        console.log(`callSteiner: ${n++}`)
         evalAndShowNet();
     }
 });
