@@ -204,19 +204,44 @@ function svgGraphsLib() {
         function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
+
+            let ex;
+            let ey;
+            if (e.type === "touchstart") {
+                ex = e.touches[0].clientX
+                ey = e.touches[0].clientY
+            } else {
+                ex = e.clientX
+                ey = e.clientY
+            }
+
+            dx = ex - parseFloat(elmnt.style.left);
+            dy = ey - parseFloat(elmnt.style.top);
+
             root.onmouseup = closeDragElement;
             root.ontouchend = closeDragElement;
             root.onmousemove = elementDrag;
             root.ontouchmove = elementDrag;
-            dx = e.clientX - parseFloat(elmnt.style.left);
-            dy = e.clientY - parseFloat(elmnt.style.top);
+
         }
 
         function elementDrag(e) {
             e = e || window.event;
             e.preventDefault();
-            const x = e.clientX - dx;
-            const y = e.clientY - dy;
+
+            let ex;
+            let ey;
+
+            if (e.type === "touchmove") {
+                ex = e.touches[0].clientX;
+                ey = e.touches[0].clientY;
+            } else {
+                ex = e.clientX;
+                ey = e.clientY;
+            }
+
+            const x = ex - dx;
+            const y = ey - dy;
 
             clearTimeout(deffered)
             deffered = setTimeout(() => {
